@@ -3,11 +3,13 @@ from django.forms import (
     Select, TextInput, BooleanField, CheckboxInput, SelectMultiple
 )
 from django.core.exceptions import (ValidationError, ObjectDoesNotExist)
-from models import (Test, Block, Stimulus)
+from models import (Test, Block, Stimulus)                                #code hinzugefuegt
 from django.forms.models import BaseInlineFormSet    
 from ckeditor.widgets import CKEditorWidget
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.flatpages.admin import FlatpageForm
+from django.core.validators import RegexValidator
+
 
 class IndexLoginForm(ModelForm):
     
@@ -31,10 +33,21 @@ class IndexLoginForm(ModelForm):
         empty_label = "Select a test...",
         label = '',
     )
+    
+    identifier = CharField(                                                           #anfang hinzugefuegt
+        validators=[RegexValidator(regex='^.{6}$', message='Die Kennziffer muss genau sechs Zeichen lang sein', code='nomatch')],  #Laenge noch fest gelegt mit Variable dann als Eingabe
+        widget=TextInput(
+            attrs = {
+            'placeholder': 'Identifier',
+            'id': 'identifier',
+            'class': 'form-control',
+        }),
+        label=''
+        )                                                                       #ende hinzugefuegt
 
     class Meta:
         model = Test
-        fields = ('test', 'password')
+        fields = ('test', 'password', 'identifier')                                   #"code" hinzugefuegt
         
     def clean_password(self):
         test_id = self.cleaned_data['test'].id

@@ -6,11 +6,14 @@ from test.models import (Test, Block, ExperimentalGroup, Trial, Stimulus, Catego
 from test.forms import (AtLeastOneFormSet, PageForm)
 from django.contrib.flatpages.admin import FlatPageAdmin
 from django.contrib.sites.models import Site
-    
+
 class StimulusInline(admin.TabularInline):
     model = Stimulus 
-    fields = ('word', 'image')
+    #fields = ('word', 'image','id')
+    #readonly_fields = ['id']
     verbose_name_plural='Stimulus'
+    extra = 1
+    formset = AtLeastOneFormSet
     
 class ExperimentalGroupInline(admin.StackedInline):
     model = ExperimentalGroup
@@ -41,11 +44,16 @@ class TestForm(forms.ModelForm):
         model = Test
 
 class CategoryAdmin(admin.ModelAdmin):
+    form = TestForm
     ordering = ('category_name',)
     list_display = ('category_name',)
     inlines = [
         StimulusInline
     ]
+    
+    def get_formset(self, request, obj=None, **kwargs):
+        StimulusInline.obj = obj
+        return super(CategoryAdmin, self).get_formset(request, obj, **kwargs)
     
 class TestAdmin(admin.ModelAdmin):  
     form = TestForm
@@ -73,10 +81,10 @@ class ParticipantAdmin(admin.ModelAdmin):
     actions = [export_as_csv]
     ordering = ('id',)
     fields = ('test', 'experimental_group')
-    list_display = ('id', 'experimental_group', 'test', 'has_completed_test')
+    list_display = ('id', 'experimental_group', 'test', 'has_completed_test', 'identifier')
     search_fields = ('experimental_group__group_name', 'test__test_name')
     readonly_fields = ('experimental_group', 'test')
-    list_filter = ('experimental_group', 'test__test_name', 'test__is_active', 'has_completed_test')
+    list_filter = ('experimental_group', 'test__test_name', 'test__is_active', 'has_completed_test', 'identifier')
     inlines = [
         TrialInline
     ]    

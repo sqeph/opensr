@@ -7,8 +7,8 @@ from django.db.models import signals
 from sortedm2m.fields import SortedManyToManyField
         
 class ParticipantManager(models.Manager):
-    def create_participant(self, experimental_group, test):
-        return self.create(experimental_group=experimental_group, test=test)
+    def create_participant(self, experimental_group, test):              
+        return self.create(experimental_group=experimental_group, test=test) 
     
 class TrialManager(models.Manager):
     def create_result(self, test, experimental_group, block, practice, primary_left_category, secondary_left_category, 
@@ -26,6 +26,7 @@ class TrialManager(models.Manager):
             latency=latency, 
             correct=correct, 
             participant=participant
+            
         )
         
 class StimuliOrderManager(models.Manager):
@@ -54,10 +55,19 @@ class ExperimentalGroup(models.Model):
     def __unicode__(self):
         return self.group_name
     
+#class Identifier(models.Model):                                                       #anfang hinzugefuegt
+#    identifier = models.CharField(max_length=6)
+#    class Meta:
+#        verbose_name = "identifier"
+#            
+#    def __unicode__(self):
+#        return "identifier"                                               #ende hinzugefuegt
+    
 class Participant(models.Model):
     experimental_group = models.ForeignKey(ExperimentalGroup, null=True)
     test = models.ForeignKey(Test)
     has_completed_test = models.BooleanField(default=False)
+    identifier = models.CharField(max_length=6)                                  #"code" hinzugefuegt
     
     objects = ParticipantManager()
     
@@ -80,10 +90,13 @@ class Category(models.Model):
         
 class Stimulus(models.Model):
     id = models.AutoField(primary_key=True, editable=True)
+    #id = models.IntegerField(primary_key=True, editable=True)
+    #id = models.CharField(max_length=60, primary_key=True)
     category = models.ForeignKey(Category)
     word = models.CharField(max_length=60, null=True, blank=True) 
     image = models.ImageField(upload_to="images/", null=True, blank=True)
     help_text = "A stimulus can either have a word or a image but not both at the same time."
+    test_text = "test"
     
     def __unicode__(self):
         stimulus_name = self.word if self.word else self.image

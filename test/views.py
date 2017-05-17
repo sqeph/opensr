@@ -6,18 +6,24 @@ from django.http import HttpResponse
 from django.conf import settings
 from itertools import chain
 from django.shortcuts import (render, redirect)
-from test.models import (Test, ExperimentalGroup, Participant, Block, Category, Trial, StimuliOrder)
+from test.models import (Test, ExperimentalGroup, Participant, Block, Category, Trial, StimuliOrder) #"code" hinzugefuegt
 from test.forms import (IndexLoginForm, EntranceLoginForm)
-from test.decorators import (has_participant_id, has_completed_test, has_not_completed_test, has_no_participant_id, has_test_id, has_no_test_id)
+from test.decorators import (has_participant_id, has_completed_test, has_not_completed_test, has_no_participant_id, has_test_id, has_no_test_id) #has_(not)_code hinzugefuegt
 import random
+from django.views.decorators.csrf import csrf_exempt
 
 @has_no_participant_id
 @has_no_test_id
 def index(request):
     login_form = IndexLoginForm()    
     if request.POST:
-        login_form = IndexLoginForm(request.POST)
+        login_form = IndexLoginForm(request.POST)                               
         if login_form.is_valid():
+#            request.session['identifier'] = Identifier.objects.get(identifier=request.POST['identifier']) #hinzugefuegt
+#            code = Code()                                                       #hinzugefuegt
+#            code.save()                                                         #ende hinzugefuegt
+            
+            request.session['identifier'] = request.POST['identifier']          #hinzugefuegt
             request.session['test'] = Test.objects.get(id=request.POST['test'])
             return redirect(reverse('informed_consent'))
         
@@ -67,6 +73,13 @@ def introduction(request):
 @has_test_id
 def experimental_group(request):
     test = request.session['test']
+    
+    identifier_from_session = request.session['identifier']                     #hinzugefuegt
+
+#    request.session['code'] = Code.objects.get(participant_code=request.POST['Kennziffer']) #prueft ob code in der Datenbank vorhanden ist.
+#    code = Test.objects.get(id=request.POST['code_id'])                           #Welche der beiden Zeilen macht mehr Sinn?
+#    code = request.session['code']                                              #Das ist irgendwie falsch...
+
     groups = ExperimentalGroup.objects.filter(test=test).order_by('id')
     
     if not 'participant' in request.session:
@@ -81,8 +94,11 @@ def experimental_group(request):
 
         group = get_next_group()
     
-        participant = Participant.objects.create_participant(group, test)
+        participant = Participant.objects.create_participant(group, test) #"code" hinzugefuegt
+        participant.identifier = identifier_from_session
+        participant.save()
         request.session['participant'] = participant
+        #request.session['participant'].identifier = 'initial'
     else:
         group = request.session['participant'].experimental_group
                                

@@ -1,5 +1,6 @@
 from django.conf.urls import *
 
+
 urlpatterns = patterns('test.views',
     url(r'^$', 'index', name='index'),
     url(r'^(?P<test_id>\d)/$', 'entrance', name='entrance'),
