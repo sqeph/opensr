@@ -10,7 +10,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Justin Svegliato', 'justin.svegliato@gmail.com'),
+    ('Tim-M. Zaruba', 'timschul@uni-potsdam.de'),
 )
 
 MANAGERS = ADMINS
@@ -18,10 +18,10 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'da49g8aro6jhpi',
-        'USER': 'rzrbugbtuyuzvu',
-        'PASSWORD': 'lK4Dn42ALtyEKZqmu3yo1VflVG',
-        'HOST': 'ec2-54-204-13-220.compute-1.amazonaws.com',
+        'NAME': 'd477dt90b637au',
+        'USER': 'fhvhozkpiiykhz',
+        'PASSWORD': 'WJO7594tutVz9nle_TAG_6tzqL',
+        'HOST': 'ec2-54-75-228-83.eu-west-1.compute.amazonaws.com',
         'PORT': '5432',
     },
 }

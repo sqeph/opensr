@@ -25,6 +25,9 @@
 
                 <tbody>
                 {% for inline_admin_form in inline_admin_formset %}
+
+                {{ inline_admin_form.pk_field.field }}
+                
                 {% if inline_admin_form.form.non_field_errors %}
                 <tr>
                     <td colspan="{{ inline_admin_form|cell_count }}">
@@ -34,7 +37,6 @@
                 {% endif %}
                 <tr class="form-row {% cycle "row1" "row2" %} {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}{% if forloop.last %} empty-form{% endif %}"
                      id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
-
                     {% for fieldset in inline_admin_form %}
                         {% for line in fieldset %}
                             {% for field in line %}
@@ -56,6 +58,7 @@
                             {% endif %}
                         </td>
                     {% endif %}
+
                 </tr>
                 {% endfor %}
                 </tbody>                
