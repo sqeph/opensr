@@ -1,5 +1,6 @@
 $(document).ready(function() {
     Test.initializeInstructionPhase();
+
     $(document).keypress(function(event) {
         if (Test.phase !== Test.Phase.TERMINATION) {
             var keyPressed = event.keyCode ? event.keyCode : event.which;
@@ -58,6 +59,8 @@ Test.stimuli = stimuli;
 Test.stimuli_orders = stimuli_orders;
 Test.media_url = media_url;
 
+
+
 Test.leftCategories = null;
 Test.rightCategories = null;
 Test.block = null;
@@ -67,6 +70,7 @@ Test.stimulusCount = null;
 Test.startTime = null;
 Test.correct = null;
 Test.timeout = null;
+Test.stimuli_backup = null;
 
 Test.START_KEY_BIND = 32;
 Test.LEFT_KEY_BINDS = [
@@ -80,11 +84,11 @@ Test.RIGHT_KEY_BINDS = [
 
 Test.handleBlock = function() {
     for (var order = 0; order < 10; order++) {
-        var blockGroup = $.grep(Test.blocks, function(n) {
+        var blockGroup = $.grep(Test.blocks, function(n) {                          
             return n.fields.order === order;
         });
         if (blockGroup !== null && blockGroup.length !== 0) {
-            var block = blockGroup[Math.floor(Math.random() * blockGroup.length)];
+            var block = blockGroup[Math.floor(Math.random() * blockGroup.length)];  //hier?
             Test.blocks = Test.blocks.filter(function(item) {
                 return item.pk !== block.pk;
             });
@@ -99,7 +103,7 @@ Test.handleStimulus = function(leftCategories, rightCategories) {
         return $.inArray(n.fields.category, categoryIds) >= 0;
     });
     var stimuli_order = $.grep(Test.stimuli_orders, function(n) {
-       return n.fields.block === Test.block.pk
+       return n.fields.block === Test.block.pk;
     })[0];
     var stimuli_id = stimuli_order.fields.stimuli[Test.stimulusCount];
     var stimulus = $.grep(filteredStimuli, function(n) {
@@ -107,8 +111,9 @@ Test.handleStimulus = function(leftCategories, rightCategories) {
     })[0];
     
     if (stimuli_order.fields.random_order || (Test.stimulusCount >= filteredStimuli.length) ) {
-        stimulus = filteredStimuli[Math.floor(Math.random() * filteredStimuli.length)];
+        stimulus = filteredStimuli[Math.floor(Math.random() * filteredStimuli.length)];                 
     } 
+    
     var html = !stimulus.fields.word 
             ? '<img class="image-stimulus" src="' + Test.media_url + stimulus.fields.image + '" alt="picture" />'
             : '<span class="text-stimulus">' + stimulus.fields.word + "</span>";          
@@ -158,16 +163,38 @@ Test.initializeTestingPhase = function() {
     Test.stimulusCount = 0;
     $("#instruction-phase-container").hide();
     $("#testing-phase-container").show();
+    
+    Test.stimuli_backup = Test.stimuli.slice(0);
+    
 };
 
 Test.displayNextStimulus = function(shouldWait) {    //Parameter hinzugefuegt
     var showStimulus = function() {
         Test.phase = Test.Phase.TESTING;
         Test.startTime = new Date().getTime();
-        while (Test.stimulus === Test.previousStimulus) {
+       
+       if (Test.stimulus === null){
             Test.stimulus = Test.handleStimulus(Test.leftCategories, Test.rightCategories);
-        }
-        Test.previousStimulus = Test.stimulus;
+            Test.previousStimulus = Test.stimulus;
+       }
+       else {
+            if (Test.stimuli.length <= 1) {
+                Test.stimulus = Test.stimuli[0];
+                Test.previousStimulus = Test.stimulus;
+                Test.stimuli = Test.stimuli_backup.slice();
+            }
+            else {
+                var index = Test.stimuli.indexOf(Test.stimulus);
+                Test.stimuli.splice(index, 1);
+                while (Test.stimulus === Test.previousStimulus) {
+                   Test.stimulus = Test.handleStimulus(Test.leftCategories, Test.rightCategories);
+                }
+                Test.previousStimulus = Test.stimulus;
+            }
+       }
+        
+        
+
         Test.correct = true;
         
         if (Test.block.fields.trial_interval > 0) {
@@ -185,10 +212,10 @@ Test.displayNextStimulus = function(shouldWait) {    //Parameter hinzugefuegt
     }
 };
 
-Test.handleNextEvent = function() {            //Parameter hinzugefuegt
+Test.handleNextEvent = function() {            
     $("#wrongStatus").css("visibility", "hidden");
     $("#rightStatus").css("visibility", "hidden");
-    
+
     if (Test.stimulusCount >= Test.block.fields.number_of_stimuli) {
         if (Test.blocks.length > 0) {
             Test.initializeInstructionPhase();
@@ -196,7 +223,7 @@ Test.handleNextEvent = function() {            //Parameter hinzugefuegt
             Test.initializeTerminationPhase();
         }
     } else {
-        Test.stimulusCount++;
+        Test.stimulusCount++;                                                   //diesen Counter mitbenutzen?
         Test.displayNextStimulus(true);
     }
 };
