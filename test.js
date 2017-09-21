@@ -1,0 +1,304 @@
+$(document).ready(function() {
+    Test.initializeInstructionPhase();
+    Test.initializeBackup();
+ 
+    $(document).keypress(function(event) {
+        if (Test.phase !== Test.Phase.TERMINATION) {
+            var keyPressed = event.keyCode ? event.keyCode : event.which;
+            if (keyPressed === Test.START_KEY_BIND && Test.phase === Test.Phase.INSTRUCTION) {
+               
+                Test.block.fields.trial_interval = 1200000;                 //Umgehen des Latenz-Fehlers durch hinzufügen eines 20 minütigen trial-intervalls
+                Test.initializeTestingPhase();
+            } else if ($.inArray(keyPressed, Test.LEFT_KEY_BINDS.concat(Test.RIGHT_KEY_BINDS)) >= 0 && Test.phase === Test.Phase.TESTING) {
+                var isNextPhaseTriggeredByParticipant = !Test.block.fields.trial_interval || Test.block.fields.trial_interval === 0;    //hier fängts vermutlich an
+                if (isNextPhaseTriggeredByParticipant) {
+                    Test.block.fields.trial_interval = 1200000;                 //Umgehen des Latenz-Fehlers durch hinzufügen eines 20 minütigen trial-intervalls
+                }
+                var correctRightCategory = $.inArray(keyPressed, Test.RIGHT_KEY_BINDS) >= 0 && $.inArray(Test.stimulus.fields.category, Test.getIds(Test.rightCategories)) >= 0;
+                var correctLeftCategory = $.inArray(keyPressed, Test.LEFT_KEY_BINDS) >= 0 && $.inArray(Test.stimulus.fields.category, Test.getIds(Test.leftCategories)) >= 0;
+                var isCorrectCategoryChosen = correctRightCategory || correctLeftCategory;
+                if (isCorrectCategoryChosen) {                                                              
+                    if (isNextPhaseTriggeredByParticipant) {                                                //Hier läuft was falsch ohne intervall
+                        Test.handleNextEvent();
+                        Test.recordTrial();
+                    } else {                                                                                
+                        clearTimeout(Test.timeout);
+                        Test.phase = Test.Phase.WAITING;
+                        $("#wrongStatus").css("display", "none").css("visibility", "hidden");
+                        $("#rightStatus").css("display", "block").css("visibility", "visible");
+                        Test.recordTrial();
+                        Test.handleNextEvent();
+                    }
+                } else {
+//                    if (!isNextPhaseTriggeredByParticipant) {
+//                        Test.phase = Test.Phase.WAITING;
+//                    }
+                    Test.correct = false;
+                    $("#wrongStatus").css("display", "block").css("visibility", "visible");
+                    $("#rightStatus").css("display", "none").css("visibility", "hidden");
+                    Test.recordTrial();
+                }
+            }
+        }
+    });
+});
+ 
+function Test() {}
+ 
+Test.Phase = {
+    INSTRUCTION: 0,
+    TESTING: 1,
+    TERMINATION: 2,
+    WAITING: 3
+};
+ 
+Test.phase = Test.Phase.INSTRUCTION;
+Test.test = test;
+Test.blocks = blocks;
+Test.categories = categories;
+Test.stimuli = stimuli;
+Test.stimuli_orders = stimuli_orders;
+Test.media_url = media_url;
+ 
+ 
+ 
+Test.leftCategories = null;
+Test.rightCategories = null;
+Test.block = null;
+Test.stimulus = null;
+Test.previousStimulus = null;
+Test.stimulusCount = null;
+Test.startTime = null;
+Test.correct = null;
+Test.timeout = null;
+Test.stimuli_backup = null;
+Test.stimuli_blacklist = [];
+ 
+Test.START_KEY_BIND = 32;
+Test.LEFT_KEY_BINDS = [
+    Test.test[0].fields.left_key_bind.toLowerCase().charCodeAt(0),
+    Test.test[0].fields.left_key_bind.toUpperCase().charCodeAt(0)
+];
+Test.RIGHT_KEY_BINDS = [
+    Test.test[0].fields.right_key_bind.toLowerCase().charCodeAt(0),
+    Test.test[0].fields.right_key_bind.toUpperCase().charCodeAt(0)
+];
+ 
+Test.handleBlock = function() {
+    for (var order = 0; order < 10; order++) {
+        var blockGroup = $.grep(Test.blocks, function(n) {                          
+            return n.fields.order === order;
+        });
+        if (blockGroup !== null && blockGroup.length !== 0) {
+            var block = blockGroup[Math.floor(Math.random() * blockGroup.length)];  //hier?
+            Test.blocks = Test.blocks.filter(function(item) {
+                return item.pk !== block.pk;
+            });
+            return block;
+        }
+    }
+};
+ 
+Test.handleStimulus = function(leftCategories, rightCategories) {
+    var categoryIds = Test.getIds(leftCategories).concat(Test.getIds(rightCategories));
+    var filteredStimuli = $.grep(Test.stimuli, function(n) {
+        return $.inArray(n.fields.category, categoryIds) >= 0;
+    });
+    var stimuli_order = $.grep(Test.stimuli_orders, function(n) {
+       return n.fields.block === Test.block.pk;
+    })[0];
+    var stimuli_id = stimuli_order.fields.stimuli[Test.stimulusCount];
+    var stimulus = $.grep(filteredStimuli, function(n) {
+        return stimuli_id === n.pk;
+    })[0];
+   
+    if (stimuli_order.fields.random_order || (Test.stimulusCount >= filteredStimuli.length) ) {
+        stimulus = filteredStimuli[Math.floor(Math.random() * filteredStimuli.length)];                
+    }
+   
+    var html = !stimulus.fields.word
+            ? '<img class="image-stimulus" src="' + Test.media_url + stimulus.fields.image + '" alt="picture" />'
+            : '<span class="text-stimulus">' + stimulus.fields.word + "</span>";          
+    $("#stimulus").html(html);
+    return stimulus;
+};
+ 
+Test.handleCategory = function(block, categoryType) {
+    var filteredCategories = $.grep(Test.categories, function(n) {
+        return n.pk === block.fields["primary_" + categoryType + "_category"] || n.pk === block.fields["secondary_" + categoryType + "_category"];
+    });
+    $("#primary-" + categoryType + "-category").html(filteredCategories[0].fields.category_name).css("color", filteredCategories[0].fields.color);
+    if (filteredCategories.length > 1) {
+        $("#secondary-" + categoryType + "-category").show().html(filteredCategories[1].fields.category_name).css("color", filteredCategories[1].fields.color);
+        $("#" + categoryType + "-separator").show();
+    } else {
+        $("#secondary-" + categoryType + "-category").hide();
+        $("#" + categoryType + "-separator").hide();
+    }
+    return filteredCategories;
+};
+ 
+Test.initializeTerminationPhase = function() {
+    Test.phase = Test.Phase.TERMINATION;
+    $("#testing-phase-container").hide();
+    $("#termination-phase-container").show();
+    var data = {'test_status': true};
+    $.get("../record/test-status/", data);
+};
+ 
+Test.initializeInstructionPhase = function() {
+    Test.phase = Test.Phase.INSTRUCTION;
+    Test.block = Test.handleBlock();
+    Test.stimulusCount = 0;
+    $("#instructions").html(Test.block.fields.instructions);
+    $("#testing-phase-container").hide();
+    $("#instruction-phase-container").show();
+    $("#wrongStatus").css("visibility", "hidden");
+    $("#rightStatus").css("visibility", "hidden");
+};
+ 
+Test.initializeTestingPhase = function() {
+    Test.phase = Test.Phase.TESTING;
+    Test.leftCategories = Test.handleCategory(Test.block, "left");
+    Test.rightCategories = Test.handleCategory(Test.block, "right");
+    Test.displayNextStimulus(false);
+    Test.stimulusCount = 0;
+    $("#instruction-phase-container").hide();
+    $("#testing-phase-container").show();    
+};
+ 
+Test.initializeBackup = function() {
+    Test.stimuli_backup = Test.stimuli.slice(0);
+};
+ 
+Test.randomizeBackup = function() {
+    var shuffeledBackup = shuffle(Test.stimuli_backup)
+    Test.stimuli_backup = shuffeledBackup;
+};
+ 
+Test.displayNextStimulus = function(shouldWait) {    //Parameter hinzugefuegt
+    var showStimulus = function() {
+        Test.phase = Test.Phase.TESTING;
+        Test.startTime = new Date().getTime();
+       
+       if (Test.stimulus === null){
+            Test.stimulus = Test.handleStimulus(Test.leftCategories, Test.rightCategories);
+            Test.previousStimulus = Test.stimulus;
+            Test.stimuli_blacklist.push(Test.stimulus);
+//            var index = Test.stimuli.indexOf(Test.stimulus);
+//            if (index > -1){
+//                Test.stimuli.splice(index, 1);
+//                Test.stimuli.pop();
+//            }
+       }
+       else {
+                if(Test.stimuli_blacklist.length === Test.stimuli.length){
+                    Test.stimuli_blacklist = [];
+                    console.log("Flush blacklist");
+                }
+                while (Test.stimulus === Test.previousStimulus || Test.stimuli_blacklist.indexOf(Test.stimulus) > -1) {
+                    Test.stimulus = Test.handleStimulus(Test.leftCategories, Test.rightCategories);
+                }
+                 Test.previousStimulus = Test.stimulus;
+                 Test.stimuli_blacklist.push(Test.stimulus);
+                 console.log("Länge Blacklist: " + Test.stimuli_blacklist.length);
+//            if (Test.stimuli.length === 1) {
+//                Test.stimulus = Test.stimuli[0];
+//                console.log("They are the same");
+//                console.log(Test.stimuli);
+//                Test.previousStimulus = Test.stimulus;    
+//                Test.randomizeBackup();
+//                Test.stimuli = Test.stimuli_backup.slice();
+//                console.log(Test.stimuli.length);
+//                console.log("smaller");
+//                console.log("Stimulus in if = " + Test.stimulus.fields.word);
+//            }
+//            else {
+//                var index = Test.stimuli.indexOf(Test.stimulus);
+//                console.log(index);
+
+//                if (index > -1){
+//                    console.log(Test.stimuli[index].fields.word);
+//                    Test.stimuli.splice(index, 1);
+//                    Test.stimuli.pop();
+//                }
+//                while (Test.stimulus === Test.previousStimulus) {
+//                   Test.stimulus = Test.handleStimulus(Test.leftCategories, Test.rightCategories);
+//                }
+//                Test.previousStimulus = Test.stimulus;
+//                console.log("greater");
+//                console.log("Stimulus in else = " + Test.stimulus.fields.word);
+            }
+       }
+       
+       
+ 
+        Test.correct = true;
+       
+        if (Test.block.fields.trial_interval > 0) {
+            Test.timeout = setTimeout(Test.handleNextEvent, Test.block.fields.trial_interval);
+        }
+    
+   
+    if (Test.block.fields.intertrial_interval > 0 && shouldWait) {
+        $("#status").css("visibility", "hidden");
+        $("#stimulus").html('<img src="/static/img/loading-spinner.gif" alt="picture" />');
+        Test.phase = Test.Phase.WAITING;
+        Test.timeout = setTimeout(showStimulus, Test.block.fields.intertrial_interval);
+    } else {
+        showStimulus();
+        console.log("Stimulus = " + Test.stimulus.fields.word);
+    }
+};
+ 
+Test.handleNextEvent = function() {            
+    $("#wrongStatus").css("visibility", "hidden");
+    $("#rightStatus").css("visibility", "hidden");
+ 
+    if (Test.stimulusCount >= Test.block.fields.number_of_stimuli) {
+        if (Test.blocks.length > 0) {
+            Test.initializeInstructionPhase();
+        } else {
+            Test.initializeTerminationPhase();
+        }
+    } else {
+        Test.stimulusCount++;                                                   //diesen Counter mitbenutzen?
+        Test.displayNextStimulus(true);
+    }
+};
+ 
+Test.getIds = function(list) {
+    var ids = [];
+    $.each(list, function(index, value) {
+        ids.push(value.pk);
+    });
+    return ids;
+};
+ 
+Test.recordTrial = function() {
+    var data = {
+        "block": Test.block.fields.block_name,
+        "practice": Test.block.fields.practice,
+        "primary_left_category": Test.leftCategories[0].fields.category_name,
+        "secondary_left_category": Test.leftCategories.length > 1 ? Test.leftCategories[1].fields.category_name : null,
+        "primary_right_category": Test.rightCategories[0].fields.category_name,
+        "secondary_right_category": Test.rightCategories.length > 1 ? Test.rightCategories[1].fields.category_name : null,
+        "stimulus": !Test.stimulus.fields.word ? Test.stimulus.fields.image : Test.stimulus.fields.word,
+        "latency": new Date().getTime() - Test.startTime,
+        "correct": Test.correct
+    };
+    $.get("../record/trial/", data);
+};
+ 
+shuffle = function(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+  while (0 !== currentIndex) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+ 
+  return array;
+}
