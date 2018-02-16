@@ -10,7 +10,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Tim-M. Zaruba', 'timschul@uni-potsdam.de'),
+    ('John Doe', 'john.doe@example.com'),
 )
 
 MANAGERS = ADMINS
@@ -18,11 +18,11 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd477dt90b637au',
-        'USER': 'fhvhozkpiiykhz',
-        'PASSWORD': 'WJO7594tutVz9nle_TAG_6tzqL',
-        'HOST': 'ec2-54-75-228-83.eu-west-1.compute.amazonaws.com',
-        'PORT': '5432',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
     },
 }
 
@@ -147,10 +147,3 @@ LOGGING = {
         },
     }
 }
-
-# from django.contrib.sites.models import Site
-
-# site = Site.objects.all()[0]
-# site.domain = SITE_URL
-# site.name = SITE_NAME
-# site.save()
