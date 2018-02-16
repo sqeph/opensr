@@ -28,6 +28,10 @@ export_info_trial = [
 ]
 
 class UnicodeWriter:
+    """
+    A CSV writer which will write rows to CSV file "f",
+    which is encoded in the given encoding.
+    """
     
     def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
         self.queue = cStringIO.StringIO()
@@ -46,7 +50,7 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
-            
+
 def export_as_csv(modeladmin, request, queryset):
 #    export_info = export_info_participant + export_info_trial
     headers, fields = zip(*export_info_trial)     
@@ -77,8 +81,8 @@ def export_as_csv(modeladmin, request, queryset):
 #        result_row.append(row)
         
     f = StringIO()
-    writer = csv.writer(f)
-#    writer = UnicodeWriter(f)                                               
+    #writer = csv.writer(f)
+    writer = UnicodeWriter(f)                                               
     for row in result_row:
         writer.writerow(row)
 
