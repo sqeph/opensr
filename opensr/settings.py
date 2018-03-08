@@ -1,6 +1,7 @@
 import os
 import environ
 import django.conf.global_settings as DEFAULT_SETTINGS
+from email.utils import getaddresses
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -11,6 +12,7 @@ env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ['127.0.0.1:8000']),
     DATABASE_URL=str,
+    ADMINS=str,
 )
 
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -80,9 +82,7 @@ TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS + (
 
 # Authentication
 
-ADMINS = (
-    ('John Doe', 'john.doe@example.com'),
-)
+ADMINS = getaddresses([env('ADMINS')])
 
 MANAGERS = ADMINS
 
