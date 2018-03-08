@@ -1,112 +1,31 @@
-import os.path
+import os
+import environ
 import django.conf.global_settings as DEFAULT_SETTINGS
 
-PROJECT_ROOT = os.path.dirname(__file__)
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(PROJECT_DIR)
 
-def get_absolute_url(directory):
-    return os.path.join(PROJECT_ROOT, directory)
+env = environ.Env(
+    SECRET_KEY=str,
+    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, ['127.0.0.1:8000']),
+    DATABASE_URL=str,
+)
 
-DEBUG = True
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = env('SECRET_KEY')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = env('DEBUG')
 TEMPLATE_DEBUG = DEBUG
 
-ADMINS = (
-    ('John Doe', 'john.doe@example.com'),
-)
+ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
-MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': '',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
-    },
-}
-
-TIME_ZONE = 'America/New_York'
-
-LANGUAGE_CODE = 'en-us'
-
-SITE_ID = 1
-
-SITE_URL = 'sp'
-
-SITE_NAME = 'OpenSR'
-
-USE_I18N = True
-
-USE_L10N = True
- 
-USE_TZ = True
-
-MEDIA_ROOT = '/opensr/media/'
-
-MEDIA_URL = '/media/'
-
-STATIC_ROOT = '/static/'
-
-STATIC_URL = '/static/'
-
-STATICFILES_DIRS = (
-    get_absolute_url('static'),
-)
-
-STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
-)
-
-SECRET_KEY = 'vpko466n_yu^rv%4u(!o2(bo1b(dcn**s8=x4dt@puy$nbrsi2'
-
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    #'django.template.loaders.eggs.Loader',
-)
-
-TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS + (
-    'django.core.context_processors.request',
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.static',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-)
-
-MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    #'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
-    #'django.middleware.clickjacking.XFrameOptionsMiddleware',
-)
-
-CKEDITOR_UPLOAD_PATH = get_absolute_url('media/images')
-
-CKEDITOR_CONFIGS = {
-    'default': {
-        'toolbar': 'Full',
-        'resize_minHeight': 300,
-        'width': 600,
-        'resize_enabled': False,
-    },
-}
-
-ROOT_URLCONF = 'opensr.urls'
-
-#WSGI_APPLICATION = 'opensr.wsgi.application'
-
-TEMPLATE_DIRS = (
-    get_absolute_url('templates'),
-)
-
+# Application definition
 
 INSTALLED_APPS = (
     'django.contrib.staticfiles',
@@ -123,6 +42,119 @@ INSTALLED_APPS = (
     'ckeditor',
     'sortedm2m'
 )
+
+MIDDLEWARE_CLASSES = (
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+#   'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
+#   'django.middleware.clickjacking.XFrameOptionsMiddleware',
+)
+
+ROOT_URLCONF = 'opensr.urls'
+
+TEMPLATE_DIRS = (
+    os.path.join(PROJECT_DIR, 'templates')
+)
+
+TEMPLATE_LOADERS = (
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
+#   'django.template.loaders.eggs.Loader',
+)
+
+TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS + (
+    'django.core.context_processors.request',
+    'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.static',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.static',
+)
+
+#WSGI_APPLICATION = 'opensr.wsgi.application'
+
+
+# Authentication
+
+ADMINS = (
+    ('John Doe', 'john.doe@example.com'),
+)
+
+MANAGERS = ADMINS
+
+
+# Database
+
+DATABASES = {
+    'default': env.db(),
+}
+
+
+# Internationalization
+
+TIME_ZONE = 'America/New_York'
+
+LANGUAGE_CODE = 'en-us'
+
+USE_I18N = True
+
+USE_L10N = True
+ 
+USE_TZ = True
+
+
+# Site definition
+
+SITE_ID = 1
+
+SITE_URL = 'sp'
+
+SITE_NAME = 'OpenSR'
+
+
+# Media files
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'opensr/media')
+
+MEDIA_URL = '/media/'
+
+
+# Static files
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = (
+    os.path.join(PROJECT_DIR, 'static'),
+)
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+#   'django.contrib.staticfiles.finders.DefaultStorageFinder',
+)
+
+
+# CKEditor
+
+CKEDITOR_UPLOAD_PATH = os.path.join(PROJECT_DIR, 'media/images')
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'Full',
+        'resize_minHeight': 300,
+        'width': 600,
+        'resize_enabled': False,
+    },
+}
+
+
+# Logging
 
 LOGGING = {
     'version': 1,

@@ -3,3 +3,4 @@ venv
 *.pyc
 staticfiles
 .DS_Store
+.env
