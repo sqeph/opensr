@@ -4,7 +4,7 @@ $(document).ready(function() {
     $(document).keypress(function(event) {
         if (Test.phase !== Test.Phase.TERMINATION) {
             var keyPressed = event.keyCode ? event.keyCode : event.which;
-            
+
             if (keyPressed === Test.START_KEY_BIND && Test.phase === Test.Phase.INSTRUCTION) {                
                 Test.block.fields.trial_interval = 1200000; // Umgehen des Latenz-Fehlers durch hinzufügen eines 20 minütigen trial-intervalls.
                 Test.initializeTestingPhase();
@@ -17,7 +17,9 @@ $(document).ready(function() {
                 var correctRightCategory = $.inArray(keyPressed, Test.RIGHT_KEY_BINDS) >= 0 && $.inArray(Test.stimulus.fields.category, Test.getIds(Test.rightCategories)) >= 0;
                 var correctLeftCategory = $.inArray(keyPressed, Test.LEFT_KEY_BINDS) >= 0 && $.inArray(Test.stimulus.fields.category, Test.getIds(Test.leftCategories)) >= 0;
                 var isCorrectCategoryChosen = correctRightCategory || correctLeftCategory;
-                if (isCorrectCategoryChosen) {                                                              
+                if (isCorrectCategoryChosen) {
+                    Test.correct = true;
+                                                                   
                     if (isNextPhaseTriggeredByParticipant) { // Hier läuft was falsch ohne intervall
                         Test.handleNextEvent();
                         Test.recordTrial();
