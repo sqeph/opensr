@@ -59,8 +59,6 @@ Test.stimuli = stimuli;
 Test.stimuli_orders = stimuli_orders;
 Test.media_url = media_url;
 
-
-
 Test.leftCategories = null;
 Test.rightCategories = null;
 Test.block = null;
@@ -88,7 +86,7 @@ Test.handleBlock = function() {
             return n.fields.order === order;
         });
         if (blockGroup !== null && blockGroup.length !== 0) {
-            var block = blockGroup[Math.floor(Math.random() * blockGroup.length)];  //hier?
+            var block = blockGroup[Math.floor(Math.random() * blockGroup.length)];
             Test.blocks = Test.blocks.filter(function(item) {
                 return item.pk !== block.pk;
             });
@@ -120,8 +118,8 @@ Test.handleStimulus = function(leftCategories, rightCategories) {
     } 
     
     var html = !stimulus.fields.word 
-            ? '<img class="image-stimulus" src="' + Test.media_url + stimulus.fields.image + '" alt="picture" />'
-            : '<span class="text-stimulus">' + stimulus.fields.word + "</span>";          
+        ? '<img class="image-stimulus" src="' + Test.media_url + stimulus.fields.image + '" alt="picture" />'
+        : '<span class="text-stimulus">' + stimulus.fields.word + "</span>";          
     $("#stimulus").html(html);
     return stimulus;
 };
@@ -134,7 +132,8 @@ Test.handleCategory = function(block, categoryType) {
     if (filteredCategories.length > 1) {
         $("#secondary-" + categoryType + "-category").show().html(filteredCategories[1].fields.category_name).css("color", filteredCategories[1].fields.color);
         $("#" + categoryType + "-separator").show();
-    } else {
+    } 
+    else {
         $("#secondary-" + categoryType + "-category").hide();
         $("#" + categoryType + "-separator").hide();
     }
@@ -171,16 +170,16 @@ Test.initializeTestingPhase = function() {
     $("#testing-phase-container").show();    
 };
 
-Test.displayNextStimulus = function(shouldWait) {    //Parameter hinzugefuegt
+Test.displayNextStimulus = function(shouldWait) {
     var showStimulus = function() {
         Test.phase = Test.Phase.TESTING;
         Test.startTime = new Date().getTime();
        
-       if (Test.stimulus === null){
+        if (Test.stimulus === null){
             Test.stimulus = Test.handleStimulus(Test.leftCategories, Test.rightCategories);
             Test.previousStimulus = Test.stimulus;
-       }
-       else {
+        }
+        else {
             if (Test.randomOrderPool !== null) {
                 var index = Test.randomOrderPool.indexOf(Test.stimulus);
                 Test.randomOrderPool.splice(index, 1);
@@ -190,7 +189,7 @@ Test.displayNextStimulus = function(shouldWait) {    //Parameter hinzugefuegt
                 Test.stimulus = Test.handleStimulus(Test.leftCategories, Test.rightCategories);
             }
             Test.previousStimulus = Test.stimulus;
-       }        
+        }        
 
         Test.correct = true;
         
@@ -204,7 +203,8 @@ Test.displayNextStimulus = function(shouldWait) {    //Parameter hinzugefuegt
         $("#stimulus").html('<img src="/static/img/loading-spinner.gif" alt="picture" />');
         Test.phase = Test.Phase.WAITING;
         Test.timeout = setTimeout(showStimulus, Test.block.fields.intertrial_interval);
-    } else {
+    } 
+    else {
         showStimulus();
     }
 };
@@ -213,14 +213,16 @@ Test.handleNextEvent = function() {
     $("#wrongStatus").css("visibility", "hidden");
     $("#rightStatus").css("visibility", "hidden");
 
-    if (Test.stimulusCount >= Test.block.fields.number_of_stimuli) {
+    if (Test.stimulusCount >= (Test.block.fields.number_of_stimuli - 1)) {
         if (Test.blocks.length > 0) {
             Test.initializeInstructionPhase();
-        } else {
+        } 
+        else {
             Test.initializeTerminationPhase();
         }
-    } else {
-        Test.stimulusCount++;                                                   //diesen Counter mitbenutzen?
+    } 
+    else {
+        Test.stimulusCount++;
         Test.displayNextStimulus(true);
     }
 };
