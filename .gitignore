@@ -4,3 +4,4 @@ venv
 staticfiles
 .DS_Store
 .env
+static
