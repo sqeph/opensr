@@ -70,7 +70,7 @@ Test.stimulusCount = null;
 Test.startTime = null;
 Test.correct = null;
 Test.timeout = null;
-Test.stimuli_backup = null;
+Test.randomOrderPool = null;
 
 Test.START_KEY_BIND = 32;
 Test.LEFT_KEY_BINDS = [
@@ -111,7 +111,12 @@ Test.handleStimulus = function(leftCategories, rightCategories) {
     })[0];
     
     if (stimuli_order.fields.random_order || (Test.stimulusCount >= filteredStimuli.length) ) {
-        stimulus = filteredStimuli[Math.floor(Math.random() * filteredStimuli.length)];                 
+        if (Test.randomOrderPool === null || Test.randomOrderPool.length < 1) {
+            Test.randomOrderPool = filteredStimuli.slice();
+        }
+        var randomIndex = Math.floor(Math.random() * Test.randomOrderPool.length);
+        stimulus = Test.randomOrderPool[randomIndex];
+        //Test.randomOrderPool.splice(randomIndex, 1);                 
     } 
     
     var html = !stimulus.fields.word 
@@ -148,6 +153,7 @@ Test.initializeInstructionPhase = function() {
     Test.phase = Test.Phase.INSTRUCTION;
     Test.block = Test.handleBlock();
     Test.stimulusCount = 0;
+    Test.randomOrderPool = null;
     $("#instructions").html(Test.block.fields.instructions);
     $("#testing-phase-container").hide();
     $("#instruction-phase-container").show();
@@ -162,10 +168,7 @@ Test.initializeTestingPhase = function() {
     Test.displayNextStimulus(false);
     Test.stimulusCount = 0;
     $("#instruction-phase-container").hide();
-    $("#testing-phase-container").show();
-    
-    Test.stimuli_backup = Test.stimuli.slice(0);
-    
+    $("#testing-phase-container").show();    
 };
 
 Test.displayNextStimulus = function(shouldWait) {    //Parameter hinzugefuegt
@@ -178,22 +181,16 @@ Test.displayNextStimulus = function(shouldWait) {    //Parameter hinzugefuegt
             Test.previousStimulus = Test.stimulus;
        }
        else {
-            if (Test.stimuli.length <= 1) {
-                Test.stimulus = Test.stimuli[0];
-                Test.previousStimulus = Test.stimulus;
-                Test.stimuli = Test.stimuli_backup.slice();
+            if (Test.randomOrderPool !== null) {
+                var index = Test.randomOrderPool.indexOf(Test.stimulus);
+                Test.randomOrderPool.splice(index, 1);
             }
-            else {
-                var index = Test.stimuli.indexOf(Test.stimulus);
-                Test.stimuli.splice(index, 1);
-                while (Test.stimulus === Test.previousStimulus) {
-                   Test.stimulus = Test.handleStimulus(Test.leftCategories, Test.rightCategories);
-                }
-                Test.previousStimulus = Test.stimulus;
+
+            while (Test.stimulus === Test.previousStimulus) {
+                Test.stimulus = Test.handleStimulus(Test.leftCategories, Test.rightCategories);
             }
-       }
-        
-        
+            Test.previousStimulus = Test.stimulus;
+       }        
 
         Test.correct = true;
         
