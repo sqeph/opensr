@@ -4,23 +4,25 @@ $(document).ready(function() {
     $(document).keypress(function(event) {
         if (Test.phase !== Test.Phase.TERMINATION) {
             var keyPressed = event.keyCode ? event.keyCode : event.which;
-            if (keyPressed === Test.START_KEY_BIND && Test.phase === Test.Phase.INSTRUCTION) {
-                
-                Test.block.fields.trial_interval = 1200000;                 //Umgehen des Latenz-Fehlers durch hinzufügen eines 20 minütigen trial-intervalls
+            
+            if (keyPressed === Test.START_KEY_BIND && Test.phase === Test.Phase.INSTRUCTION) {                
+                Test.block.fields.trial_interval = 1200000; // Umgehen des Latenz-Fehlers durch hinzufügen eines 20 minütigen trial-intervalls.
                 Test.initializeTestingPhase();
-            } else if ($.inArray(keyPressed, Test.LEFT_KEY_BINDS.concat(Test.RIGHT_KEY_BINDS)) >= 0 && Test.phase === Test.Phase.TESTING) { 
-                var isNextPhaseTriggeredByParticipant = !Test.block.fields.trial_interval || Test.block.fields.trial_interval === 0;    //hier fängts vermutlich an
+            } 
+            else if ($.inArray(keyPressed, Test.LEFT_KEY_BINDS.concat(Test.RIGHT_KEY_BINDS)) >= 0 && Test.phase === Test.Phase.TESTING) { 
+                var isNextPhaseTriggeredByParticipant = !Test.block.fields.trial_interval || Test.block.fields.trial_interval === 0; // Hier fängts vermutlich an
                 if (isNextPhaseTriggeredByParticipant) {
-                    Test.block.fields.trial_interval = 1200000;                 //Umgehen des Latenz-Fehlers durch hinzufügen eines 20 minütigen trial-intervalls
+                    Test.block.fields.trial_interval = 1200000; // Umgehen des Latenz-Fehlers durch hinzufügen eines 20 minütigen trial-intervalls
                 }
                 var correctRightCategory = $.inArray(keyPressed, Test.RIGHT_KEY_BINDS) >= 0 && $.inArray(Test.stimulus.fields.category, Test.getIds(Test.rightCategories)) >= 0;
                 var correctLeftCategory = $.inArray(keyPressed, Test.LEFT_KEY_BINDS) >= 0 && $.inArray(Test.stimulus.fields.category, Test.getIds(Test.leftCategories)) >= 0;
                 var isCorrectCategoryChosen = correctRightCategory || correctLeftCategory;
                 if (isCorrectCategoryChosen) {                                                              
-                    if (isNextPhaseTriggeredByParticipant) {                                                //Hier läuft was falsch ohne intervall
+                    if (isNextPhaseTriggeredByParticipant) { // Hier läuft was falsch ohne intervall
                         Test.handleNextEvent();
                         Test.recordTrial();
-                    } else {                                                                                
+                    } 
+                    else {                                                                                
                         clearTimeout(Test.timeout);
                         Test.phase = Test.Phase.WAITING;
                         $("#wrongStatus").css("display", "none").css("visibility", "hidden");
@@ -28,10 +30,11 @@ $(document).ready(function() {
                         Test.recordTrial();
                         Test.handleNextEvent();
                     }
-                } else {
-//                    if (!isNextPhaseTriggeredByParticipant) {
-//                        Test.phase = Test.Phase.WAITING;
-//                    }
+                } 
+                else {
+                    //if (!isNextPhaseTriggeredByParticipant) {
+                    //    Test.phase = Test.Phase.WAITING;
+                    //}
                     Test.correct = false;
                     $("#wrongStatus").css("display", "block").css("visibility", "visible");
                     $("#rightStatus").css("display", "none").css("visibility", "hidden");
